@@ -1,0 +1,1 @@
+This repository was created to support testing the installation of [MadAnalysis5](https://launchpad.net/madanalysis5) using the [Windows Subsystem for Linux](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux) (WSL, a.k.a. Bash on Ubuntu on Windows) available in Windows 10. 
