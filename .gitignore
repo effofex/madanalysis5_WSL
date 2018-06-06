@@ -27,6 +27,7 @@
 *.lib
 
 # Executables
+MadAnalysis5job
 *.exe
 *.out
 *.app
