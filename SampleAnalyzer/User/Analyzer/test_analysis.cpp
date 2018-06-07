@@ -32,9 +32,15 @@ void test_analysis::filterBaseLine(const vector<RecLeptonFormat> &from, vector<R
                     double min_pt, double maxAbsEta){
   copy_if(from.begin(),from.end(),
 	back_inserter(to),
-        [](const RecLeptonFormat& l){return (l.pt() > 5) && (abs(l.eta())<2.47);});
+        [&min_pt,&maxAbsEta](const RecLeptonFormat& l){return (l.pt() > min_pt ) && (abs(l.eta())< maxAbsEta);});
 }
 
+void test_analysis::filterBaseLine(const vector<RecJetFormat> &from, vector<RecJetFormat> &to, 
+                    double min_pt, double maxAbsEta){
+  copy_if(from.begin(),from.end(),
+	back_inserter(to),
+        [&min_pt,&maxAbsEta](const RecJetFormat& l){return (l.pt() > min_pt) && (abs(l.eta())< maxAbsEta);});
+}
 // -----------------------------------------------------------------------------
 // Execute
 // function called each time one event is read
@@ -52,44 +58,18 @@ bool test_analysis::Execute(SampleFormat& sample, const EventFormat& event)
     vector<MAuint32> removeElecIndex;
     vector<MAuint32> removeMuonIndex;
 
-/***************************************************
-Create baseline vectors
-***************************************************/
-    filterBaseLine(event.rec()->electrons(),baseLineElecs,5,2.47);
-    //Example of looping thru with auto
-    /*for( auto &i: baseLineElecs)
-    {
-      cout << i.pt() << endl;
-    }*/
+    /***************************************************
+    * Create baseline vectors
+    ***************************************************/
     
-    // Looking through the reconstructed muon collection
-    for (MAuint32 i=0;i<event.rec()->muons().size();i++)
-    {
-      const RecLeptonFormat& muon = event.rec()->muons()[i];
-      
-      const double momentumBound  = 4; //GeV
-      const double psuedoRapidityBound = 2.7; 
-      if(momentumBound < muon.pt() && psuedoRapidityBound >= abs(muon.eta())){
-        baseLineMuons.push_back(muon);
-      }
-    }
+    filterBaseLine(event.rec()->electrons(),baseLineElecs,5,2.47);
+    filterBaseLine(event.rec()->muons(),baseLineMuons,4,2.7);
+    filterBaseLine(event.rec()->jets(),baseLineJets,25,2.5);
  
-    //Looking through reconstructed jet collection
-    for(MAuint32 i=0;i<event.rec()->jets().size();i++)
-    {
-      const RecJetFormat& jet = event.rec()->jets()[i];
 
-      const double momentumBound = 25; //GeV
-      const double psuedoRapidityBound = 2.5;
-
-      if(momentumBound < jet.pt() && psuedoRapidityBound >= abs(jet.eta())){
-        baseLineJets.push_back(jet);
-      }
-    }
-
-/***********************************
-Determine overlapping elements to remove
-***********************************/
+    /***********************************
+    * Determine overlapping elements to remove
+*   **********************************/
     
     //Overlap removal between electrons and jets, partial implementation of col
     //#2 in Table 3 of CERN-ERP-2017-246 https://arxiv.org/pdf/1711.11520.pdf

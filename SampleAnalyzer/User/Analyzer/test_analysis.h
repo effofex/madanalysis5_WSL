@@ -15,6 +15,8 @@ class test_analysis : public AnalyzerBase
   virtual bool Execute(SampleFormat& sample, const EventFormat& event);
 
  private:
+  virtual void filterBaseLine(const std::vector<RecJetFormat> &to, std::vector<RecJetFormat> &from,
+                              double min_pt, double maxAbsEta);
   virtual void filterBaseLine(const std::vector<RecLeptonFormat> &to, std::vector<RecLeptonFormat> &from,
                               double min_pt, double maxAbsEta);
 };
