@@ -50,7 +50,7 @@ Create baseline vectors
 ***************************************************/
 
     // Looking through the reconstructed electron collection
-    for (MAuint32 i=0;i<event.rec()->electrons().size();i++)
+    /*for (MAuint32 i=0;i<event.rec()->electrons().size();i++)
     {
       const RecLeptonFormat& elec = event.rec()->electrons()[i];
       
@@ -59,6 +59,15 @@ Create baseline vectors
       if(momentumBound < elec.pt() && psuedoRapidityBound > abs(elec.eta())){
         baseLineElecs.push_back(elec);
       }
+    }*/
+
+    copy_if(event.rec()->electrons().begin(),event.rec()->electrons().end(),
+	back_inserter(baseLineElecs),[](const RecLeptonFormat& l){return (l.pt() > 5) && (abs(l.eta())<2.47);});
+
+    //Example of looping thru with auto
+    for( auto &i: baseLineElecs)
+    {
+      cout << i.pt() << endl;
     }
     
     // Looking through the reconstructed muon collection
