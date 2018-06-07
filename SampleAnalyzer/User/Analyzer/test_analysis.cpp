@@ -48,26 +48,19 @@ void test_analysis::filterBaseLine(const vector<RecJetFormat> &from, vector<RecJ
 bool test_analysis::Execute(SampleFormat& sample, const EventFormat& event)
 {
   if(0 != event.rec()){    
-    vector<RecLeptonFormat> baseLineElecs;
-    vector<RecLeptonFormat> baseLineMuons;
-    vector<RecJetFormat> baseLineJets;    
-    int origSizeBlElec = 0;
-    int origSizeBlMuon = 0;
-    int origSizeBlJet  = 0;
-    vector<RecLeptonFormat> signalMuons;
-    vector<RecLeptonFormat> signalElecs;
-    vector<RecJetFormat> signalJets;
-    vector<MAuint32> removeJetIndex; 
-    vector<MAuint32> removeElecIndex;
-    vector<MAuint32> removeMuonIndex;
+    vector<RecLeptonFormat> elecs;
+    vector<RecLeptonFormat> muons;
+    vector<RecJetFormat> jets;    
+    int blSizeElec = 0;
+    int blSizeMuon = 0;
+    int blSizeJet  = 0;
 
     /***************************************************
     * Create baseline vectors
     ***************************************************/
-    
-    filterBaseLine(event.rec()->electrons(),baseLineElecs,5,2.47);
-    filterBaseLine(event.rec()->muons(),baseLineMuons,4,2.7);
-    filterBaseLine(event.rec()->jets(),baseLineJets,25,2.5);
+    filterBaseLine(event.rec()->electrons(),elecs,5,2.47);
+    filterBaseLine(event.rec()->muons(),muons,4,2.7);
+    filterBaseLine(event.rec()->jets(),jets,25,2.5);
  
 
     /***********************************
@@ -76,40 +69,40 @@ bool test_analysis::Execute(SampleFormat& sample, const EventFormat& event)
       
     //Before doing any overlap removal, record the original size of the 
     //baseline vectors, so that they can be reported later
-    origSizeBlJet = baseLineJets.size();
-    origSizeBlElec = baseLineElecs.size();
-    origSizeBlMuon = baseLineMuons.size();
+    blSizeJet = jets.size();
+    blSizeElec = elecs.size();
+    blSizeMuon = muons.size();
     
     //Overlap removal between electrons and jets, partial implementation of col
     //#2 in Table 3 of CERN-ERP-2017-246 https://arxiv.org/pdf/1711.11520.pdf
-     for(MAuint32 j=0;j<baseLineElecs.size();j++)
+     for(MAuint32 j=0;j<elecs.size();j++)
     {
-      const RecLeptonFormat& myelec = baseLineElecs[j];
-      baseLineJets.erase(remove_if(baseLineJets.begin(),baseLineJets.end(),
+      const RecLeptonFormat& myelec = elecs[j];
+      jets.erase(remove_if(jets.begin(),jets.end(),
         [&myelec](RecJetFormat& j){return j.dr(myelec);}),
-        baseLineJets.end());
+        jets.end());
     }
     
     //Overlap removal between jets and leptons, partialimplmentation of col 
     //#4 in Table 3 of CERN-ERP-2017-246 https://arxiv.org/pdf/1711.11520.pdf
     //Performed in two steps, since both elecs and muons are leptons
-    for(MAuint32 i=0;i<baseLineJets.size();i++)
+    for(MAuint32 i=0;i<jets.size();i++)
     {
-      const RecJetFormat& myjet = baseLineJets[i];
-      baseLineElecs.erase(remove_if(baseLineElecs.begin(),baseLineElecs.end(),
+      const RecJetFormat& myjet = jets[i];
+      elecs.erase(remove_if(elecs.begin(),elecs.end(),
         [&myjet](RecLeptonFormat& l){return myjet.dr(l)<min(0.4,0.4+10/l.pt());}),
-        baseLineElecs.end());
+        elecs.end());
     }
          
     //Repeating the removal for muons.  The duplication here is a bit of code
     //itch, but I'm holding off on extracting a function until we do the 
     //full overlap algorithm
-    for(MAuint32 i=0;i<baseLineJets.size();i++)
+    for(MAuint32 i=0;i<jets.size();i++)
     {
-      const RecJetFormat& myjet = baseLineJets[i];
-      baseLineMuons.erase(remove_if(baseLineMuons.begin(),baseLineMuons.end(),
+      const RecJetFormat& myjet = jets[i];
+      muons.erase(remove_if(muons.begin(),muons.end(),
         [&myjet](RecLeptonFormat& l){return myjet.dr(l)<min(0.4,0.4+10/l.pt());}),
-        baseLineMuons.end());
+        muons.end());
     }
  
    
@@ -118,11 +111,11 @@ bool test_analysis::Execute(SampleFormat& sample, const EventFormat& event)
    ********************/ 
     cout << "Base and signal vector sizes" << endl;
     cout << "Particle\tBase\tRemoved\tSignal" << endl;
-    cout << "\tJets:\t" << origSizeBlJet << "\t" << origSizeBlJet-baseLineJets.size() << "\t" << baseLineJets.size() << endl;
-    cout << "\tElecs:\t" << origSizeBlElec << "\t" << origSizeBlElec-baseLineElecs.size() << "\t" << baseLineElecs.size() << endl;
-    cout << "\tMuons:\t" << origSizeBlMuon << "\t" << origSizeBlMuon-baseLineMuons.size() << "\t" << baseLineMuons.size() << endl;
+    cout << "\tJets:\t" << blSizeJet << "\t" << blSizeJet-jets.size() << "\t" << jets.size() << endl;
+    cout << "\tElecs:\t" << blSizeElec << "\t" << blSizeElec-elecs.size() << "\t" << elecs.size() << endl;
+    cout << "\tMuons:\t" << blSizeMuon << "\t" << blSizeMuon-muons.size() << "\t" << muons.size() << endl;
 
-}
+  }
 
 
   return true; 
