@@ -28,6 +28,13 @@ void test_analysis::Finalize(const SampleFormat& summary, const std::vector<Samp
   cout << "END   Finalization" << endl;
 }
 
+void test_analysis::filterBaseLine(const vector<RecLeptonFormat> &from, vector<RecLeptonFormat> &to, 
+                    double min_pt, double maxAbsEta){
+  copy_if(from.begin(),from.end(),
+	back_inserter(to),
+        [](const RecLeptonFormat& l){return (l.pt() > 5) && (abs(l.eta())<2.47);});
+}
+
 // -----------------------------------------------------------------------------
 // Execute
 // function called each time one event is read
@@ -48,27 +55,12 @@ bool test_analysis::Execute(SampleFormat& sample, const EventFormat& event)
 /***************************************************
 Create baseline vectors
 ***************************************************/
-
-    // Looking through the reconstructed electron collection
-    /*for (MAuint32 i=0;i<event.rec()->electrons().size();i++)
-    {
-      const RecLeptonFormat& elec = event.rec()->electrons()[i];
-      
-      const double momentumBound  = 5; //GeV
-      const double psuedoRapidityBound = 2.47; 
-      if(momentumBound < elec.pt() && psuedoRapidityBound > abs(elec.eta())){
-        baseLineElecs.push_back(elec);
-      }
-    }*/
-
-    copy_if(event.rec()->electrons().begin(),event.rec()->electrons().end(),
-	back_inserter(baseLineElecs),[](const RecLeptonFormat& l){return (l.pt() > 5) && (abs(l.eta())<2.47);});
-
+    filterBaseLine(event.rec()->electrons(),baseLineElecs,5,2.47);
     //Example of looping thru with auto
-    for( auto &i: baseLineElecs)
+    /*for( auto &i: baseLineElecs)
     {
       cout << i.pt() << endl;
-    }
+    }*/
     
     // Looking through the reconstructed muon collection
     for (MAuint32 i=0;i<event.rec()->muons().size();i++)
